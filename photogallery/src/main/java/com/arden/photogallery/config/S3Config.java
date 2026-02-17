@@ -1,5 +1,7 @@
 package com.arden.photogallery.config;
 
+import software.amazon.awssdk.services.rekognition.RekognitionClient;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
@@ -17,4 +19,13 @@ public class S3Config {
                 .region(Region.US_EAST_1) 
                 .build();
     }
+
+    @Bean
+    public RekognitionClient rekognitionClient() {
+        return RekognitionClient.builder()
+                .region(Region.US_EAST_1) 
+                .build();
+    }
+
 }
+

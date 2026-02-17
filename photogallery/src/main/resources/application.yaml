@@ -18,3 +18,6 @@ aws:
   region: us-east-1
   s3:
     bucket: arden-photogallery-bucket
+
+openai:
+  api-key: ${OPENAI_API_KEY}
