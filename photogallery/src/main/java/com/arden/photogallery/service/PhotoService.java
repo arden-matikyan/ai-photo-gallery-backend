@@ -1,12 +1,14 @@
 package com.arden.photogallery.service;
 
-import com.arden.photogallery.model.Photo;
-import com.arden.photogallery.repository.PhotoRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.arden.photogallery.model.Photo;
+import com.arden.photogallery.repository.PhotoRepository;
+
+import lombok.RequiredArgsConstructor;
 // @Service: . It’s primarily a semantic marker for the service layer (business logic), but functionally identical to @Component
 
 @Service
@@ -37,7 +39,8 @@ public class PhotoService {
     public List<Photo> searchByTag(String tag) {
         return photoRepository.findByTagsContainingIgnoreCase(tag);
     }
-    */ 
+    
+
 
     public List<Photo> search(String query) {
 
@@ -69,6 +72,7 @@ public class PhotoService {
                 })
                 .toList();
     }
+    */ 
 
 
 }

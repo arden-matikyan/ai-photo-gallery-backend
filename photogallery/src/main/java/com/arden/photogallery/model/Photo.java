@@ -2,10 +2,14 @@ package com.arden.photogallery.model;
 
 
 // JPA translates your Java object into SQL automatically
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.Data;
 
 
 // @Entity (from javax.persistence or jakarta.persistence) marks the class as a JPA entity that will be persisted to a database table
@@ -20,13 +24,19 @@ public class Photo {
 
     private String title;
 
-    @Column(length = 2000)
-    private String description;
+   @Column(length = 2000)
+    private String caption;
+
+    private String mood;
+
+    private String style;
+
+    private String lighting;
+
+    private String primarySubject;
 
     private String s3Url;
 
-    @Column(length = 2000)
-    private String tags;
 
     private LocalDateTime createdAt;
 }

@@ -1,22 +1,26 @@
 package com.arden.photogallery.controller;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.arden.photogallery.model.Photo;
 import com.arden.photogallery.service.OpenAIService;
 import com.arden.photogallery.service.PhotoService;
-import com.arden.photogallery.service.AIService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
 import com.arden.photogallery.service.S3Service;
-import org.springframework.web.multipart.MultipartFile;
-import java.io.IOException;
 
-
-
-import java.util.List;
-
-
-
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/photos")
@@ -26,9 +30,8 @@ public class PhotoController {
 
     private final PhotoService photoService;
     private final S3Service s3Service;
-    private final AIService aiService;
+    // private final AIService aiService;
     private final OpenAIService openAIService;
-
 
     @PostMapping
     public Photo createPhoto(@RequestBody Photo photo) {
@@ -45,16 +48,17 @@ public class PhotoController {
         return photoService.getPhoto(id);
     }
 
-
     @DeleteMapping("/{id}")
     public void deletePhoto(@PathVariable Long id) {
         photoService.deletePhoto(id);
     }
 
+    /* 
     @GetMapping("/search")
     public List<Photo> search(@RequestParam String q) {
         return photoService.search(q);
     }
+    */ 
 
     @PostMapping("/upload")
     public Photo uploadPhoto(
@@ -62,39 +66,40 @@ public class PhotoController {
             @RequestParam(required = false) String title
     ) throws IOException {
 
-        // Upload to S3
-        String key = s3Service.uploadFile(
+        // upload to s3 
+        String s3Url = s3Service.uploadFile(
                 file.getOriginalFilename(),
                 file.getBytes()
         );
 
-        // extract object key from URL
-        String objectKey = key.substring(key.lastIndexOf("/") + 1);
+        // extract object key 
+        String objectKey = s3Url.substring(s3Url.lastIndexOf("/") + 1);
 
-        // generate AI tags
-        String tags = aiService.generateTags(objectKey);
+        // generate url for gpt access 
+        String presignedUrl = s3Service.generatePresignedUrl(objectKey);
 
-        // generate caption
-        String caption;
+        System.out.println("Presigned URL: " + presignedUrl);
 
+       // use gpt vision to analyze image 
+        Map<String, Object> metadata;
         try {
-            caption = openAIService.generateCaption(tags);
+            metadata = openAIService.analyzeImage(presignedUrl);
         } catch (Exception e) {
-            caption = "AI caption unavailable";
+            throw new RuntimeException("Vision analysis failed", e);
         }
 
-        // Save photo
+        // save with gpt output 
         Photo photo = new Photo();
         photo.setTitle(title);
-        photo.setS3Url(key);
-        photo.setTags(tags);
-        photo.setDescription(caption);
+        photo.setS3Url(s3Url);
 
+        photo.setCaption((String) metadata.get("caption"));
+        photo.setMood((String) metadata.get("mood"));
+        photo.setStyle((String) metadata.get("style"));
+        photo.setLighting((String) metadata.get("lighting"));
+        photo.setPrimarySubject((String) metadata.get("primary_subject"));
 
         return photoService.savePhoto(photo);
     }
 
-
-
 }
-

@@ -1,13 +1,19 @@
 package com.arden.photogallery.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,5 +38,25 @@ public class S3Service {
         s3Client.putObject(putObjectRequest, RequestBody.fromBytes(fileBytes));
 
         return "https://" + bucketName + ".s3.amazonaws.com/" + key;
+    }
+
+    public String generatePresignedUrl(String key) {
+
+        S3Presigner presigner = S3Presigner.create();
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest
+                = GetObjectPresignRequest.builder()
+                        .signatureDuration(Duration.ofMinutes(10))
+                        .getObjectRequest(getObjectRequest)
+                        .build();
+
+        return presigner.presignGetObject(presignRequest)
+                .url()
+                .toString();
     }
 }
